@@ -29,4 +29,9 @@ public class QueryWorkflowInfoRequest {
     private Long workflowId;
     private String keyword;
 
+    /**
+     * 状态
+     */
+    private Integer status;
+
 }

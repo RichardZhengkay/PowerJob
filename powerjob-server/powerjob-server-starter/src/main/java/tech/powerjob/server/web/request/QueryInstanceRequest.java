@@ -3,6 +3,8 @@ package tech.powerjob.server.web.request;
 import lombok.Data;
 import tech.powerjob.server.common.constants.InstanceType;
 
+import java.util.List;
+
 /**
  * 任务实例查询对象
  *
@@ -33,4 +35,6 @@ public class QueryInstanceRequest {
     private Long wfInstanceId;
 
     private String status;
+
+    private List<Long> triggerTime;
 }

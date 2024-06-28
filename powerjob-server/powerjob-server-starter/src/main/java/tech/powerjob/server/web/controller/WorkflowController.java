@@ -1,5 +1,6 @@
 package tech.powerjob.server.web.controller;
 
+import org.springframework.data.jpa.domain.Specification;
 import tech.powerjob.common.request.http.SaveWorkflowNodeRequest;
 import tech.powerjob.common.request.http.SaveWorkflowRequest;
 import tech.powerjob.common.response.ResultDTO;
@@ -18,9 +19,10 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
+import javax.persistence.criteria.Predicate;
 import java.text.ParseException;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.function.LongToDoubleFunction;
 import java.util.stream.Collectors;
 
 /**
@@ -74,17 +76,34 @@ public class WorkflowController {
         PageRequest pageRequest = PageRequest.of(req.getIndex(), req.getPageSize(), sort);
         Page<WorkflowInfoDO> wfPage;
 
-        // 排除已删除数据
-        int nStatus = SwitchableStatus.DELETED.getV();
-        // 无查询条件，查询全部
-        if (req.getWorkflowId() == null && StringUtils.isEmpty(req.getKeyword())) {
-            wfPage = workflowInfoRepository.findByAppIdAndStatusNot(req.getAppId(), nStatus, pageRequest);
-        }else if (req.getWorkflowId() != null) {
-            wfPage = workflowInfoRepository.findByIdAndStatusNot(req.getWorkflowId(), nStatus, pageRequest);
-        }else {
-            String condition = "%" + req.getKeyword() + "%";
-            wfPage = workflowInfoRepository.findByAppIdAndStatusNotAndWfNameLike(req.getAppId(), nStatus, condition, pageRequest);
-        }
+        Specification<WorkflowInfoDO> specification = (root, query, cb) -> {
+            List<Predicate> predicates = new ArrayList<>();
+
+            Predicate appIdPredicate = cb.equal(root.get("appId"), req.getAppId());
+            predicates.add(appIdPredicate);
+
+            Predicate statusNotEqualPredicate = cb.notEqual(root.get("status"), SwitchableStatus.DELETED.getV());
+            predicates.add(statusNotEqualPredicate);
+
+            if (null != req.getWorkflowId()) {
+                Predicate jobIdPredicate = cb.equal(root.get("id"), req.getWorkflowId());
+                predicates.add(jobIdPredicate);
+            }
+
+            if (StringUtils.isNotBlank(req.getKeyword())) {
+                Predicate jobNamePredicate = cb.like(root.get("wfName"), "%" + req.getKeyword() + "%");
+                predicates.add(jobNamePredicate);
+            }
+
+            if (null != req.getStatus()) {
+                Predicate statusPredicate = cb.equal(root.get("status"), req.getStatus());
+                predicates.add(statusPredicate);
+            }
+
+            // 使用 CriteriaBuilder 的 and 方法组合所有的 Predicate
+            return cb.and(predicates.toArray(new Predicate[0]));
+        };
+        wfPage = workflowInfoRepository.findAll(specification, pageRequest);
         return ResultDTO.success(convertPage(wfPage));
     }
 

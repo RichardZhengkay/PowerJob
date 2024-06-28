@@ -1,5 +1,6 @@
 package tech.powerjob.server.persistence.remote.repository;
 
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import tech.powerjob.server.persistence.remote.model.WorkflowInfoDO;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -13,7 +14,7 @@ import java.util.List;
  * @author tjq
  * @since 2020/5/26
  */
-public interface WorkflowInfoRepository extends JpaRepository<WorkflowInfoDO, Long> {
+public interface WorkflowInfoRepository extends JpaRepository<WorkflowInfoDO, Long>, JpaSpecificationExecutor<WorkflowInfoDO> {
 
 
     List<WorkflowInfoDO> findByAppIdInAndStatusAndTimeExpressionTypeAndNextTriggerTimeLessThanEqual(List<Long> appIds, int status, int timeExpressionType, long time);

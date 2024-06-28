@@ -1,5 +1,7 @@
 package tech.powerjob.server.web.controller;
 
+import org.springframework.data.jpa.domain.Specification;
+import org.springframework.util.CollectionUtils;
 import tech.powerjob.common.enums.WorkflowInstanceStatus;
 import tech.powerjob.common.response.ResultDTO;
 import tech.powerjob.server.persistence.PageResult;
@@ -9,8 +11,6 @@ import tech.powerjob.server.core.service.CacheService;
 import tech.powerjob.server.core.workflow.WorkflowInstanceService;
 import tech.powerjob.server.web.request.QueryWorkflowInstanceRequest;
 import tech.powerjob.server.web.response.WorkflowInstanceInfoVO;
-import org.springframework.beans.BeanUtils;
-import org.springframework.data.domain.Example;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
@@ -18,6 +18,9 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
+import javax.persistence.criteria.Predicate;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.stream.Collectors;
 
 /**
@@ -64,17 +67,26 @@ public class WorkflowInstanceController {
 
     @PostMapping("/list")
     public ResultDTO<PageResult<WorkflowInstanceInfoVO>> listWfInstance(@RequestBody QueryWorkflowInstanceRequest req) {
-        Sort sort = Sort.by(Sort.Direction.DESC, "gmtModified");
+        Sort sort = Sort.by(Sort.Direction.DESC, "actualTriggerTime");
         PageRequest pageable = PageRequest.of(req.getIndex(), req.getPageSize(), sort);
 
-        WorkflowInstanceInfoDO queryEntity = new WorkflowInstanceInfoDO();
-        BeanUtils.copyProperties(req, queryEntity);
+        Specification<WorkflowInstanceInfoDO> specification = (root, query, cb) -> {
+            List<Predicate> predicates = new ArrayList<>();
 
-        if (!StringUtils.isEmpty(req.getStatus())) {
-            queryEntity.setStatus(WorkflowInstanceStatus.valueOf(req.getStatus()).getV());
-        }
+            if (StringUtils.isNoneBlank(req.getStatus())) {
+                Predicate statusPredicate = cb.equal(root.get("status"), WorkflowInstanceStatus.valueOf(req.getStatus()).getV());
+                predicates.add(statusPredicate);
+            }
 
-        Page<WorkflowInstanceInfoDO> ps = workflowInstanceInfoRepository.findAll(Example.of(queryEntity), pageable);
+            if (!CollectionUtils.isEmpty(req.getTriggerTime())) {
+                Predicate actualTriggerTimePredicate = cb.between(root.get("actualTriggerTime"), req.getTriggerTime().get(0), req.getTriggerTime().get(1));
+                predicates.add(actualTriggerTimePredicate);
+            }
+
+            // 使用 CriteriaBuilder 的 and 方法组合所有的 Predicate
+            return cb.and(predicates.toArray(new Predicate[0]));
+        };
+        Page<WorkflowInstanceInfoDO> ps = workflowInstanceInfoRepository.findAll(specification, pageable);
 
         return ResultDTO.success(convertPage(ps));
     }

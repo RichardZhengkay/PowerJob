@@ -2,6 +2,8 @@ package tech.powerjob.server.web.request;
 
 import lombok.Data;
 
+import java.util.List;
+
 /**
  * 查询工作流实例请求
  *
@@ -31,4 +33,6 @@ public class QueryWorkflowInstanceRequest {
     private Long workflowId;
 
     private String status;
+
+    private List<Long> triggerTime;
 }
