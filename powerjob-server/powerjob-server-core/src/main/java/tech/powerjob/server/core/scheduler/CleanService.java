@@ -4,6 +4,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Stopwatch;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.time.DateUtils;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -58,7 +59,7 @@ public class CleanService {
 
     private static final String HISTORY_DELETE_LOCK = "history_delete_lock";
 
-    public CleanService(DFsService dFsService, InstanceInfoRepository instanceInfoRepository, WorkflowInstanceInfoRepository workflowInstanceInfoRepository,
+    public CleanService(@Qualifier("initDbFs") DFsService dFsService, InstanceInfoRepository instanceInfoRepository, WorkflowInstanceInfoRepository workflowInstanceInfoRepository,
                         WorkflowNodeInfoRepository workflowNodeInfoRepository, LockService lockService,
                         @Value("${oms.instanceinfo.retention}") int instanceInfoRetentionDay,
                         @Value("${oms.container.retention.local}") int localContainerRetentionDay,
@@ -86,6 +87,7 @@ public class CleanService {
         cleanLocal(OmsFileUtils.genContainerJarPath(), localContainerRetentionDay);
         cleanLocal(OmsFileUtils.genTemporaryPath(), TEMPORARY_RETENTION_DAY);
 
+        // TODO：修改清理策略
         // 删除数据库历史的数据
         cleanByOneServer();
     }
@@ -102,8 +104,8 @@ public class CleanService {
         }
         try {
             // 删除数据库运行记录
-            cleanInstanceLog();
-            cleanWorkflowInstanceLog();
+            //cleanInstanceLog();
+            //cleanWorkflowInstanceLog();
             // 删除无用节点
             cleanWorkflowNodeInfo();
             // 删除 GridFS 过期文件

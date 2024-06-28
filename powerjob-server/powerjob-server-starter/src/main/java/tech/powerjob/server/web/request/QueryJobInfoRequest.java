@@ -28,4 +28,9 @@ public class QueryJobInfoRequest {
      */
     private Long jobId;
     private String keyword;
+
+    /**
+     * 状态
+     */
+    private Integer status;
 }

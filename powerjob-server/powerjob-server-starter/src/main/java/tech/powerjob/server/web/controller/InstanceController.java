@@ -1,8 +1,11 @@
 package tech.powerjob.server.web.controller;
 
+import org.springframework.data.jpa.domain.Specification;
+import org.springframework.util.CollectionUtils;
 import tech.powerjob.common.OmsConstant;
 import tech.powerjob.common.enums.InstanceStatus;
 import tech.powerjob.common.response.ResultDTO;
+import tech.powerjob.server.common.constants.SwitchableStatus;
 import tech.powerjob.server.common.utils.OmsFileUtils;
 import tech.powerjob.server.persistence.PageResult;
 import tech.powerjob.server.persistence.StringPage;
@@ -18,8 +21,6 @@ import tech.powerjob.server.web.response.InstanceInfoVO;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
-import org.springframework.beans.BeanUtils;
-import org.springframework.data.domain.Example;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
@@ -27,9 +28,11 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
+import javax.persistence.criteria.Predicate;
 import javax.servlet.http.HttpServletResponse;
 import java.io.File;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -135,18 +138,33 @@ public class InstanceController {
     @PostMapping("/list")
     public ResultDTO<PageResult<InstanceInfoVO>> list(@RequestBody QueryInstanceRequest request) {
 
-        Sort sort = Sort.by(Sort.Direction.DESC, "gmtModified");
+        Sort sort = Sort.by(Sort.Direction.DESC, "actualTriggerTime");
         PageRequest pageable = PageRequest.of(request.getIndex(), request.getPageSize(), sort);
 
-        InstanceInfoDO queryEntity = new InstanceInfoDO();
-        BeanUtils.copyProperties(request, queryEntity);
-        queryEntity.setType(request.getType().getV());
+        Specification<InstanceInfoDO> specification = (root, query, cb) -> {
+            List<Predicate> predicates = new ArrayList<>();
 
-        if (!StringUtils.isEmpty(request.getStatus())) {
-            queryEntity.setStatus(InstanceStatus.valueOf(request.getStatus()).getV());
-        }
+            Predicate appIdPredicate = cb.equal(root.get("type"), request.getType().getV());
+            predicates.add(appIdPredicate);
 
-        Page<InstanceInfoDO> pageResult = instanceInfoRepository.findAll(Example.of(queryEntity), pageable);
+            Predicate statusNotEqualPredicate = cb.notEqual(root.get("status"), SwitchableStatus.DELETED.getV());
+            predicates.add(statusNotEqualPredicate);
+
+            if (StringUtils.isNoneBlank(request.getStatus())) {
+                Predicate statusPredicate = cb.equal(root.get("status"), InstanceStatus.valueOf(request.getStatus()).getV());
+                predicates.add(statusPredicate);
+            }
+
+            if (!CollectionUtils.isEmpty(request.getTriggerTime())) {
+                Predicate actualTriggerTimePredicate = cb.between(root.get("actualTriggerTime"), request.getTriggerTime().get(0), request.getTriggerTime().get(1));
+                predicates.add(actualTriggerTimePredicate);
+            }
+
+            // 使用 CriteriaBuilder 的 and 方法组合所有的 Predicate
+            return cb.and(predicates.toArray(new Predicate[0]));
+        };
+
+        Page<InstanceInfoDO> pageResult = instanceInfoRepository.findAll(specification, pageable);
         return ResultDTO.success(convertPage(pageResult));
     }
 

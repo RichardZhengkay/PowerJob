@@ -1,6 +1,8 @@
 package tech.powerjob.server.web.controller;
 
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.data.domain.*;
+import org.springframework.data.jpa.domain.Specification;
 import tech.powerjob.common.request.http.SaveJobInfoRequest;
 import tech.powerjob.common.response.ResultDTO;
 import tech.powerjob.server.common.constants.SwitchableStatus;
@@ -10,16 +12,14 @@ import tech.powerjob.server.persistence.remote.repository.JobInfoRepository;
 import tech.powerjob.server.core.service.JobService;
 import tech.powerjob.server.web.request.QueryJobInfoRequest;
 import tech.powerjob.server.web.response.JobInfoVO;
-import com.google.common.collect.Lists;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Sort;
+import javax.persistence.criteria.Predicate;
+
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 /**
@@ -78,43 +78,34 @@ public class JobController {
         PageRequest pageRequest = PageRequest.of(request.getIndex(), request.getPageSize(), sort);
         Page<JobInfoDO> jobInfoPage;
 
-        // 无查询条件，查询全部
-        if (request.getJobId() == null && StringUtils.isEmpty(request.getKeyword())) {
-            jobInfoPage = jobInfoRepository.findByAppIdAndStatusNot(request.getAppId(), SwitchableStatus.DELETED.getV(), pageRequest);
-            return ResultDTO.success(convertPage(jobInfoPage));
-        }
+        Specification<JobInfoDO> specification = (root, query, cb) -> {
+            List<Predicate> predicates = new ArrayList<>();
 
-        // 有 jobId，直接精确查询
-        if (request.getJobId() != null) {
+            Predicate appIdPredicate = cb.equal(root.get("appId"), request.getAppId());
+            predicates.add(appIdPredicate);
 
-            Optional<JobInfoDO> jobInfoOpt = jobInfoRepository.findById(request.getJobId());
+            Predicate statusNotEqualPredicate = cb.notEqual(root.get("status"), SwitchableStatus.DELETED.getV());
+            predicates.add(statusNotEqualPredicate);
 
-            PageResult<JobInfoVO> result = new PageResult<>();
-
-            if (!jobInfoOpt.isPresent()) {
-                result.setTotalPages(0);
-                result.setTotalItems(0);
-                result.setData(Lists.newLinkedList());
-                return ResultDTO.success(result);
+            if (null != request.getJobId()) {
+                Predicate jobIdPredicate = cb.equal(root.get("id"), request.getJobId());
+                predicates.add(jobIdPredicate);
             }
 
-            if (!jobInfoOpt.get().getAppId().equals(request.getAppId())){
-                return ResultDTO.failed("请输入该app下的jobId");
+            if (StringUtils.isNotBlank(request.getKeyword())) {
+                Predicate jobNamePredicate = cb.like(root.get("jobName"), "%" + request.getKeyword() + "%");
+                predicates.add(jobNamePredicate);
             }
 
-            result.setIndex(0);
-            result.setPageSize(request.getPageSize());
+            if (null != request.getStatus()) {
+                Predicate statusPredicate = cb.equal(root.get("status"), request.getStatus());
+                predicates.add(statusPredicate);
+            }
 
-            result.setTotalItems(1);
-            result.setTotalPages(1);
-            result.setData(Lists.newArrayList(JobInfoVO.from(jobInfoOpt.get())));
-
-            return ResultDTO.success(result);
-        }
-
-        // 模糊查询
-        String condition = "%" + request.getKeyword() + "%";
-        jobInfoPage = jobInfoRepository.findByAppIdAndJobNameLikeAndStatusNot(request.getAppId(), condition, SwitchableStatus.DELETED.getV(), pageRequest);
+            // 使用 CriteriaBuilder 的 and 方法组合所有的 Predicate
+            return cb.and(predicates.toArray(new Predicate[0]));
+        };
+        jobInfoPage = jobInfoRepository.findAll(specification, pageRequest);
         return ResultDTO.success(convertPage(jobInfoPage));
     }
 
