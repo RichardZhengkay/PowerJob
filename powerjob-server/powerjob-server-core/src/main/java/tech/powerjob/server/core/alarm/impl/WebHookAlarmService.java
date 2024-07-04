@@ -14,6 +14,7 @@ import org.springframework.util.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * http 回调报警
@@ -33,6 +34,7 @@ public class WebHookAlarmService implements Alarmable {
         if (CollectionUtils.isEmpty(targetUserList)) {
             return;
         }
+        List<String> phoneList = targetUserList.stream().map(AlarmTarget::getPhone).filter(phone -> !StringUtils.isEmpty(phone)).collect(Collectors.toList());
         targetUserList.forEach(user -> {
             String webHook = user.getWebHook();
             if (StringUtils.isEmpty(webHook)) {
@@ -45,7 +47,10 @@ public class WebHookAlarmService implements Alarmable {
             }
 
             MediaType jsonType = MediaType.parse(OmsConstant.JSON_MEDIA_TYPE);
-            RequestBody requestBody = RequestBody.create(jsonType, JSONObject.toJSONString(alarm));
+            String alarmJson =  JSONObject.toJSONString(alarm);
+            JSONObject jsonObject =  JSONObject.parseObject(alarmJson);
+            jsonObject.put("phone",phoneList);
+            RequestBody requestBody = RequestBody.create(jsonType, JSONObject.toJSONString(jsonObject));
 
             try {
                 String response = HttpUtils.post(webHook, requestBody);

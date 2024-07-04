@@ -455,6 +455,7 @@ public class WorkflowInstanceManager {
                     WorkflowInstanceAlarm content = new WorkflowInstanceAlarm();
 
                     BeanUtils.copyProperties(wfInfo, content);
+                    content.setWorkflowName(wfInfo.getWfName());
                     BeanUtils.copyProperties(wfInstance, content);
                     content.setResult(result);
 

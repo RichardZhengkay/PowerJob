@@ -141,11 +141,10 @@ public class MySqlSeriesDfsService extends AbstractDFsService {
         Map<String, Object> meta = Maps.newHashMap();
         meta.put("_server_", serverInfo.getIp());
         meta.put("_local_file_path_", storeRequest.getLocalFile().getAbsolutePath());
-        BufferedInputStream bufferedInputStream = new BufferedInputStream(Files.newInputStream(storeRequest.getLocalFile().toPath()));
 
-        Date date = new Date(System.currentTimeMillis());
-
-        try (Connection con = dataSource.getConnection()) {
+        try (BufferedInputStream bufferedInputStream = new BufferedInputStream(Files.newInputStream(storeRequest.getLocalFile().toPath()));
+             Connection con = dataSource.getConnection()) {
+            Date date = new Date(System.currentTimeMillis());
             PreparedStatement pst = con.prepareStatement(insertSQL);
 
             pst.setString(1, fileLocation.getBucket());
@@ -166,8 +165,6 @@ public class MySqlSeriesDfsService extends AbstractDFsService {
         } catch (Exception e) {
             log.error("[MySqlSeriesDfsService] store [{}] failed!", fileLocation);
             ExceptionUtils.rethrow(e);
-        }finally {
-            bufferedInputStream.close();
         }
     }
 
