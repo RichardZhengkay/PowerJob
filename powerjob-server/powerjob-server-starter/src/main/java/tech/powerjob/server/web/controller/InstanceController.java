@@ -150,6 +150,11 @@ public class InstanceController {
             Predicate statusNotEqualPredicate = cb.notEqual(root.get("status"), SwitchableStatus.DELETED.getV());
             predicates.add(statusNotEqualPredicate);
 
+            if (null != request.getJobId()) {
+                Predicate jobIdPredicate = cb.equal(root.get("jobId"), request.getJobId());
+                predicates.add(jobIdPredicate);
+            }
+
             if (StringUtils.isNoneBlank(request.getStatus())) {
                 Predicate statusPredicate = cb.equal(root.get("status"), InstanceStatus.valueOf(request.getStatus()).getV());
                 predicates.add(statusPredicate);

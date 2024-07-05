@@ -73,6 +73,11 @@ public class WorkflowInstanceController {
         Specification<WorkflowInstanceInfoDO> specification = (root, query, cb) -> {
             List<Predicate> predicates = new ArrayList<>();
 
+            if (null != req.getWorkflowId()) {
+                Predicate workflowIdPredicate = cb.equal(root.get("workflowId"), req.getWorkflowId());
+                predicates.add(workflowIdPredicate);
+            }
+
             if (StringUtils.isNoneBlank(req.getStatus())) {
                 Predicate statusPredicate = cb.equal(root.get("status"), WorkflowInstanceStatus.valueOf(req.getStatus()).getV());
                 predicates.add(statusPredicate);

@@ -104,8 +104,8 @@ public class CleanService {
         }
         try {
             // 删除数据库运行记录
-            //cleanInstanceLog();
-            //cleanWorkflowInstanceLog();
+            cleanInstanceLog();
+            cleanWorkflowInstanceLog();
             // 删除无用节点
             cleanWorkflowNodeInfo();
             // 删除 GridFS 过期文件
