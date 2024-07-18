@@ -81,25 +81,19 @@ public class JobController {
         Specification<JobInfoDO> specification = (root, query, cb) -> {
             List<Predicate> predicates = new ArrayList<>();
 
-            Predicate appIdPredicate = cb.equal(root.get("appId"), request.getAppId());
-            predicates.add(appIdPredicate);
-
-            Predicate statusNotEqualPredicate = cb.notEqual(root.get("status"), SwitchableStatus.DELETED.getV());
-            predicates.add(statusNotEqualPredicate);
-
+            predicates.add(cb.equal(root.get("appId"), request.getAppId()));
+            predicates.add(cb.notEqual(root.get("status"), SwitchableStatus.DELETED.getV()));
             if (null != request.getJobId()) {
-                Predicate jobIdPredicate = cb.equal(root.get("id"), request.getJobId());
-                predicates.add(jobIdPredicate);
+                predicates.add(cb.equal(root.get("id"), request.getJobId()));
             }
-
             if (StringUtils.isNotBlank(request.getKeyword())) {
-                Predicate jobNamePredicate = cb.like(root.get("jobName"), "%" + request.getKeyword() + "%");
-                predicates.add(jobNamePredicate);
+                predicates.add(cb.like(root.get("jobName"), "%" + request.getKeyword() + "%"));
             }
-
             if (null != request.getStatus()) {
-                Predicate statusPredicate = cb.equal(root.get("status"), request.getStatus());
-                predicates.add(statusPredicate);
+                predicates.add(cb.equal(root.get("status"), request.getStatus()));
+            }
+            if (null != request.getTimeExpressionType()) {
+                predicates.add(cb.equal(root.get("timeExpressionType"), request.getTimeExpressionType()));
             }
 
             // 使用 CriteriaBuilder 的 and 方法组合所有的 Predicate

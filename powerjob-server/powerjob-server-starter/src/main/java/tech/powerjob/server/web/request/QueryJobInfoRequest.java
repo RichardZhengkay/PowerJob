@@ -33,4 +33,6 @@ public class QueryJobInfoRequest {
      * 状态
      */
     private Integer status;
+
+    private Integer timeExpressionType;
 }

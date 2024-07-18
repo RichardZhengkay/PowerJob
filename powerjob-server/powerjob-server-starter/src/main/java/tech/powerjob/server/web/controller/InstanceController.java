@@ -144,25 +144,16 @@ public class InstanceController {
         Specification<InstanceInfoDO> specification = (root, query, cb) -> {
             List<Predicate> predicates = new ArrayList<>();
 
-            Predicate appIdPredicate = cb.equal(root.get("type"), request.getType().getV());
-            predicates.add(appIdPredicate);
-
-            Predicate statusNotEqualPredicate = cb.notEqual(root.get("status"), SwitchableStatus.DELETED.getV());
-            predicates.add(statusNotEqualPredicate);
-
+            predicates.add(cb.equal(root.get("type"), request.getType().getV()));
+            predicates.add(cb.notEqual(root.get("status"), SwitchableStatus.DELETED.getV()));
             if (null != request.getJobId()) {
-                Predicate jobIdPredicate = cb.equal(root.get("jobId"), request.getJobId());
-                predicates.add(jobIdPredicate);
+                predicates.add(cb.equal(root.get("jobId"), request.getJobId()));
             }
-
             if (StringUtils.isNoneBlank(request.getStatus())) {
-                Predicate statusPredicate = cb.equal(root.get("status"), InstanceStatus.valueOf(request.getStatus()).getV());
-                predicates.add(statusPredicate);
+                predicates.add(cb.equal(root.get("status"), InstanceStatus.valueOf(request.getStatus()).getV()));
             }
-
             if (!CollectionUtils.isEmpty(request.getTriggerTime())) {
-                Predicate actualTriggerTimePredicate = cb.between(root.get("actualTriggerTime"), request.getTriggerTime().get(0), request.getTriggerTime().get(1));
-                predicates.add(actualTriggerTimePredicate);
+                predicates.add(cb.between(root.get("actualTriggerTime"), request.getTriggerTime().get(0), request.getTriggerTime().get(1)));
             }
 
             // 使用 CriteriaBuilder 的 and 方法组合所有的 Predicate
