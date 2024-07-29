@@ -146,6 +146,8 @@ public class InstanceController {
 
             predicates.add(cb.equal(root.get("type"), request.getType().getV()));
             predicates.add(cb.notEqual(root.get("status"), SwitchableStatus.DELETED.getV()));
+            predicates.add(cb.equal(root.get("appId"), request.getAppId()));
+
             if (null != request.getJobId()) {
                 predicates.add(cb.equal(root.get("jobId"), request.getJobId()));
             }
