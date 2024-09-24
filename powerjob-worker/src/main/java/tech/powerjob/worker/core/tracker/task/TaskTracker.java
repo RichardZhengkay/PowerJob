@@ -80,6 +80,7 @@ public abstract class TaskTracker {
         instanceInfo.setInstanceParams(req.getInstanceParams());
         instanceInfo.setThreadConcurrency(req.getThreadConcurrency());
         instanceInfo.setTaskRetryNum(req.getTaskRetryNum());
+        instanceInfo.setRetryIntervalTime(req.getRetryIntervalTime());
         instanceInfo.setLogConfig(req.getLogConfig());
         instanceInfo.setInstanceTimeoutMS(req.getInstanceTimeoutMS());
         instanceInfo.setAdvancedRuntimeConfig(req.getAdvancedRuntimeConfig());

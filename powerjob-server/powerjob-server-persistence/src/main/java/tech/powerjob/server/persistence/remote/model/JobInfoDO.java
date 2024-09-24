@@ -94,6 +94,8 @@ public class JobInfoDO {
 
     private Integer taskRetryNum;
 
+    private Long retryIntervalTime;
+
     /**
      * 1 正常运行，2 停止（不再调度）
      */

@@ -210,6 +210,10 @@ public class LightTaskTracker extends TaskTracker {
                 log.warn("[TaskTracker-{}] process failed, TaskTracker will have a retry,current retryTimes : {}", instanceId, taskContext.getCurrentRetryTimes());
             }
             try {
+                if (taskContext.getCurrentRetryTimes() > 0 && taskContext.getCurrentRetryTimes() <= taskContext.getMaxRetryTimes()) {
+                    long retryIntervalTime = null == taskContext.getRetryIntervalTime() || taskContext.getRetryIntervalTime() <= 0L ? 0L : taskContext.getRetryIntervalTime();
+                    TimeUnit.SECONDS.sleep(retryIntervalTime);
+                }
                 res = processorBean.getProcessor().process(taskContext);
             } catch (InterruptedException e) {
                 log.warn("[TaskTracker-{}] task has been interrupted !", instanceId, e);
@@ -362,6 +366,7 @@ public class LightTaskTracker extends TaskTracker {
         context.setTaskName(TaskConstant.ROOT_TASK_NAME);
         context.setMaxRetryTimes(req.getTaskRetryNum());
         context.setCurrentRetryTimes(0);
+        context.setRetryIntervalTime(req.getRetryIntervalTime());
         context.setUserContext(workerRuntime.getWorkerConfig().getUserContext());
         // 轻量级任务不会涉及到任务分片的处理，不需要处理子任务相关的信息
         return context;

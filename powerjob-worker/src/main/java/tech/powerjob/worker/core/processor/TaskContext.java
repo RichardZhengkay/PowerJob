@@ -55,6 +55,10 @@ public class TaskContext {
      */
     private int currentRetryTimes;
     /**
+     * 重试间隔时间
+     */
+    private Long retryIntervalTime;
+    /**
      * 子任务对象，通过Map/MapReduce处理器的map方法生成
      */
     private Object subTask;

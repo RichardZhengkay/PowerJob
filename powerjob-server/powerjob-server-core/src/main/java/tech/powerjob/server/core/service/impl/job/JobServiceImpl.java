@@ -90,7 +90,7 @@ public class JobServiceImpl implements JobService {
 
         // 转化报警用户列表
         if (request.getNotifyUserIds() != null) {
-            if (request.getNotifyUserIds().size() == 0) {
+            if (request.getNotifyUserIds().isEmpty()) {
                 jobInfoDO.setNotifyUserIds(null);
             } else {
                 jobInfoDO.setNotifyUserIds(SJ.COMMA_JOINER.join(request.getNotifyUserIds()));

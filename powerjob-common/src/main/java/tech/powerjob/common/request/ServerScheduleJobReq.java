@@ -75,6 +75,11 @@ public class ServerScheduleJobReq implements PowerSerializable {
     private int taskRetryNum;
 
     /**
+     * 重试间隔时间
+     */
+    private Long retryIntervalTime;
+
+    /**
      * 时间表达式类型（CRON/API/FIX_RATE/FIX_DELAY）
      */
     private String timeExpressionType;

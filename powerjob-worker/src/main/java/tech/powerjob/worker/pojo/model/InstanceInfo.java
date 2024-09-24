@@ -52,6 +52,8 @@ public class InstanceInfo implements Serializable {
     // 子任务重试次数（任务本身的重试机制由server控制）
     private int taskRetryNum;
 
+    private Long retryIntervalTime;
+
     private String logConfig;
 
     private String advancedRuntimeConfig;

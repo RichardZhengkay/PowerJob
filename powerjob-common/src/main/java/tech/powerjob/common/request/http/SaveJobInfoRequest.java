@@ -97,6 +97,8 @@ public class SaveJobInfoRequest {
      */
     private Integer taskRetryNum = 0;
 
+    private Long retryIntervalTime = 0L;
+
     /* ************************** Busy Machine setting. ************************** */
     /**
      * Minimum CPU required. {@code 0} means there is no restriction.
