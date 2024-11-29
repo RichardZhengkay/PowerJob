@@ -55,12 +55,9 @@ public class InstanceInfoVO {
      */
     private String finishedTime;
 
-    public static InstanceInfoVO from(InstanceInfoDO instanceInfoDo, String jobName) {
+    public static InstanceInfoVO from(InstanceInfoDO instanceInfoDo) {
         InstanceInfoVO instanceInfoVO = new InstanceInfoVO();
         BeanUtils.copyProperties(instanceInfoDo, instanceInfoVO);
-
-        // 额外设置任务名称，提高可读性
-        instanceInfoVO.setJobName(jobName);
 
         // ID 转化为 String（JS精度丢失）
         instanceInfoVO.setJobId(instanceInfoDo.getJobId().toString());

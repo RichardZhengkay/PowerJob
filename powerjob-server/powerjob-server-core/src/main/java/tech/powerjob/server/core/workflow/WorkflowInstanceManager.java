@@ -175,6 +175,7 @@ public class WorkflowInstanceManager {
         newWfInstance.setAppId(wfInfo.getAppId());
         newWfInstance.setWfInstanceId(wfInstanceId);
         newWfInstance.setWorkflowId(wfId);
+        newWfInstance.setWorkflowName(wfInfo.getWfName());
         newWfInstance.setStatus(WorkflowInstanceStatus.WAITING.getV());
         newWfInstance.setExpectedTriggerTime(expectTriggerTime);
         newWfInstance.setActualTriggerTime(System.currentTimeMillis());

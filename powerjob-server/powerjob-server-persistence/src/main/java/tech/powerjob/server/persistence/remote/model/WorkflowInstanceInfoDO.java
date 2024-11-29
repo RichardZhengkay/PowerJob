@@ -45,6 +45,9 @@ public class WorkflowInstanceInfoDO {
     private Long parentWfInstanceId;
 
     private Long workflowId;
+
+    private String workflowName;
+
     /**
      * workflow 状态（WorkflowInstanceStatus）
      */

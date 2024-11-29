@@ -34,6 +34,12 @@ public class InstanceInfoDO {
      * 任务ID
      */
     private Long jobId;
+
+    /**
+     * 任务名称
+     */
+    private String jobName;
+
     /**
      * 任务所属应用的ID，冗余提高查询效率
      */

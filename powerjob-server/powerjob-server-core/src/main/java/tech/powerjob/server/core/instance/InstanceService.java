@@ -80,13 +80,14 @@ public class InstanceService {
      * @param expectTriggerTime 预期执行时间
      * @return 任务实例ID
      */
-    public InstanceInfoDO create(Long jobId, Long appId, String jobParams, String instanceParams, Long wfInstanceId, Long expectTriggerTime) {
+    public InstanceInfoDO create(Long jobId, String jobName, Long appId, String jobParams, String instanceParams, Long wfInstanceId, Long expectTriggerTime) {
 
         Long instanceId = idGenerateService.allocate();
         Date now = new Date();
 
         InstanceInfoDO newInstanceInfo = new InstanceInfoDO();
         newInstanceInfo.setJobId(jobId);
+        newInstanceInfo.setJobName(jobName);
         newInstanceInfo.setAppId(appId);
         newInstanceInfo.setInstanceId(instanceId);
         newInstanceInfo.setJobParams(jobParams);

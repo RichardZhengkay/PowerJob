@@ -24,7 +24,7 @@ public class WorkflowInstanceInfoVO {
 
     private String workflowId;
     /**
-     * 工作流名称，通过 workflowId 查询获取
+     * 工作流名称
      */
     private String workflowName;
 
@@ -58,11 +58,10 @@ public class WorkflowInstanceInfoVO {
      */
     private String finishedTime;
 
-    public static WorkflowInstanceInfoVO from(WorkflowInstanceInfoDO wfInstanceDO, String workflowName) {
+    public static WorkflowInstanceInfoVO from(WorkflowInstanceInfoDO wfInstanceDO) {
         WorkflowInstanceInfoVO vo = new WorkflowInstanceInfoVO();
         BeanUtils.copyProperties(wfInstanceDO, vo);
 
-        vo.setWorkflowName(workflowName);
         vo.setPEWorkflowDAG(JSONObject.parseObject(wfInstanceDO.getDag(), PEWorkflowDAG.class));
 
         // JS精度丢失问题
@@ -76,10 +75,9 @@ public class WorkflowInstanceInfoVO {
         vo.setActualTriggerTime(DateFormatUtils.format(wfInstanceDO.getActualTriggerTime(), OmsConstant.TIME_PATTERN));
         if (wfInstanceDO.getFinishedTime() == null) {
             vo.setFinishedTime(OmsConstant.NONE);
-        }else {
+        } else {
             vo.setFinishedTime(DateFormatUtils.format(wfInstanceDO.getFinishedTime(), OmsConstant.TIME_PATTERN));
         }
-
         return vo;
     }
 }

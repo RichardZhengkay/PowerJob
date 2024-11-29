@@ -11,7 +11,6 @@ import tech.powerjob.server.persistence.PageResult;
 import tech.powerjob.server.persistence.StringPage;
 import tech.powerjob.server.persistence.remote.model.InstanceInfoDO;
 import tech.powerjob.server.persistence.remote.repository.InstanceInfoRepository;
-import tech.powerjob.server.core.service.CacheService;
 import tech.powerjob.server.core.instance.InstanceLogService;
 import tech.powerjob.server.core.instance.InstanceService;
 import tech.powerjob.server.web.request.QueryInstanceDetailRequest;
@@ -56,8 +55,6 @@ public class InstanceController {
     @Resource
     private InstanceLogService instanceLogService;
 
-    @Resource
-    private CacheService cacheService;
     @Resource
     private InstanceInfoRepository instanceInfoRepository;
 
@@ -151,6 +148,9 @@ public class InstanceController {
             if (null != request.getJobId()) {
                 predicates.add(cb.equal(root.get("jobId"), request.getJobId()));
             }
+            if (StringUtils.isNotBlank(request.getJobName())) {
+                predicates.add(cb.like(root.get("jobName"), "%" + request.getJobName() + "%"));
+            }
             if (StringUtils.isNoneBlank(request.getStatus())) {
                 predicates.add(cb.equal(root.get("status"), InstanceStatus.valueOf(request.getStatus()).getV()));
             }
@@ -167,11 +167,8 @@ public class InstanceController {
     }
 
     private PageResult<InstanceInfoVO> convertPage(Page<InstanceInfoDO> page) {
-        List<InstanceInfoVO> content = page.getContent().stream()
-                .map(x -> InstanceInfoVO.from(x, cacheService.getJobName(x.getJobId()))).collect(Collectors.toList());
-
         PageResult<InstanceInfoVO> pageResult = new PageResult<>(page);
-        pageResult.setData(content);
+        pageResult.setData(page.getContent().stream().map(InstanceInfoVO::from).collect(Collectors.toList()));
         return pageResult;
     }
 

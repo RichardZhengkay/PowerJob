@@ -32,6 +32,12 @@ public class QueryInstanceRequest {
     private InstanceType type;
     private Long instanceId;
     private Long jobId;
+
+    /**
+     * 任务名称
+     */
+    private String jobName;
+
     private Long wfInstanceId;
 
     private String status;

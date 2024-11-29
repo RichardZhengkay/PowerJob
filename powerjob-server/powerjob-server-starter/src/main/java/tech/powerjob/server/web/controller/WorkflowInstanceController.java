@@ -7,7 +7,6 @@ import tech.powerjob.common.response.ResultDTO;
 import tech.powerjob.server.persistence.PageResult;
 import tech.powerjob.server.persistence.remote.model.WorkflowInstanceInfoDO;
 import tech.powerjob.server.persistence.remote.repository.WorkflowInstanceInfoRepository;
-import tech.powerjob.server.core.service.CacheService;
 import tech.powerjob.server.core.workflow.WorkflowInstanceService;
 import tech.powerjob.server.web.request.QueryWorkflowInstanceRequest;
 import tech.powerjob.server.web.response.WorkflowInstanceInfoVO;
@@ -33,8 +32,6 @@ import java.util.stream.Collectors;
 @RequestMapping("/wfInstance")
 public class WorkflowInstanceController {
 
-    @Resource
-    private CacheService cacheService;
     @Resource
     private WorkflowInstanceService workflowInstanceService;
     @Resource
@@ -62,7 +59,7 @@ public class WorkflowInstanceController {
     @GetMapping("/info")
     public ResultDTO<WorkflowInstanceInfoVO> getInfo(Long wfInstanceId, Long appId) {
         WorkflowInstanceInfoDO wfInstanceDO = workflowInstanceService.fetchWfInstance(wfInstanceId, appId);
-        return ResultDTO.success(WorkflowInstanceInfoVO.from(wfInstanceDO, cacheService.getWorkflowName(wfInstanceDO.getWorkflowId())));
+        return ResultDTO.success(WorkflowInstanceInfoVO.from(wfInstanceDO));
     }
 
     @PostMapping("/list")
@@ -77,6 +74,11 @@ public class WorkflowInstanceController {
             if (null != req.getWorkflowId()) {
                 Predicate workflowIdPredicate = cb.equal(root.get("workflowId"), req.getWorkflowId());
                 predicates.add(workflowIdPredicate);
+            }
+
+            if (StringUtils.isNotBlank(req.getWorkflowName())) {
+                Predicate workflowNamePredicate = cb.like(root.get("workflowName"), "%" + req.getWorkflowName() + "%");
+                predicates.add(workflowNamePredicate);
             }
 
             if (StringUtils.isNoneBlank(req.getStatus())) {
@@ -99,7 +101,7 @@ public class WorkflowInstanceController {
 
     private PageResult<WorkflowInstanceInfoVO> convertPage(Page<WorkflowInstanceInfoDO> ps) {
         PageResult<WorkflowInstanceInfoVO> pr = new PageResult<>(ps);
-        pr.setData(ps.getContent().stream().map(x -> WorkflowInstanceInfoVO.from(x, cacheService.getWorkflowName(x.getWorkflowId()))).collect(Collectors.toList()));
+        pr.setData(ps.getContent().stream().map(WorkflowInstanceInfoVO::from).collect(Collectors.toList()));
         return pr;
     }
 }

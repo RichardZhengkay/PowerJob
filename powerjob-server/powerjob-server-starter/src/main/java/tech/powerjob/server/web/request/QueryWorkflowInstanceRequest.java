@@ -32,6 +32,8 @@ public class QueryWorkflowInstanceRequest {
 
     private Long workflowId;
 
+    private String workflowName;
+
     private String status;
 
     private List<Long> triggerTime;
