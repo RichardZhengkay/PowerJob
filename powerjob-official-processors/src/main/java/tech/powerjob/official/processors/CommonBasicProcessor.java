@@ -33,11 +33,11 @@ public abstract class CommonBasicProcessor implements BasicProcessor {
         String status = "unknown";
         Stopwatch sw = Stopwatch.createStarted();
 
-        omsLogger.info("using params: {}", CommonUtils.parseParams(ctx));
+        omsLogger.info("任务参数: {}", CommonUtils.parseParams(ctx));
 
         try {
             ProcessResult result = process0(ctx);
-            omsLogger.info("execute succeed, using {}, result: {}", sw, result);
+            omsLogger.info("执行成功，使用 {}, 执行结果: {}", sw, result.getMsg());
             status = result.isSuccess() ? "succeed" : "failed";
             return result;
         } catch (Throwable t) {

@@ -13,6 +13,8 @@ import tech.powerjob.official.processors.CommonBasicProcessor;
 import tech.powerjob.official.processors.util.CommonUtils;
 
 import java.time.Duration;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
@@ -31,7 +33,9 @@ public class HttpProcessor extends CommonBasicProcessor {
      */
     private static final int DEFAULT_TIMEOUT = 60;
     private static final int HTTP_SUCCESS_CODE = 200;
+    private static final String HTTP_SUCCESS_CODE_1 = "0000";
     private static final Map<Integer, OkHttpClient> CLIENT_STORE = new ConcurrentHashMap<>();
+    private static final List<String> ALLOWED_METHODS = Arrays.asList("GET", "POST", "PUT", "DELETE");
 
     @Override
     public ProcessResult process0(TaskContext taskContext) throws Exception {
@@ -39,27 +43,31 @@ public class HttpProcessor extends CommonBasicProcessor {
         HttpParams httpParams = JSON.parseObject(CommonUtils.parseParams(taskContext), HttpParams.class);
 
         if (httpParams == null) {
-            String message = "httpParams is null, please check jobParam configuration.";
-            omsLogger.warn(message);
+            String message = "HTTP请求的参数为空，请检查jobParam配置。";
+            omsLogger.error(message);
             return new ProcessResult(false, message);
         }
 
         if (StringUtils.isEmpty(httpParams.url)) {
-            return new ProcessResult(false, "url can't be empty!");
+            String message = "调用URL地址不能为空！";
+            omsLogger.error(message);
+            return new ProcessResult(false, message);
         }
 
         if (!httpParams.url.startsWith("http")) {
             httpParams.url = "http://" + httpParams.url;
         }
-        omsLogger.info("request url: {}", httpParams.url);
+        omsLogger.info("调用的URL: {}", httpParams.url);
 
         // set default method
         if (StringUtils.isEmpty(httpParams.method)) {
             httpParams.method = "GET";
-            omsLogger.info("using default request method: GET");
+            omsLogger.warn("请求方式为空，使用默认请求方法: GET");
+        } else if (ALLOWED_METHODS.stream().noneMatch(httpParams.method::contains)) {
+            return new ProcessResult(false, "请求方法仅支持：" + ALLOWED_METHODS);
         } else {
             httpParams.method = httpParams.method.toUpperCase();
-            omsLogger.info("request method: {}", httpParams.method);
+            omsLogger.info("请求方法: {}", httpParams.method);
         }
 
         // set default mediaType
@@ -67,11 +75,11 @@ public class HttpProcessor extends CommonBasicProcessor {
             // set default request body
             if (StringUtils.isEmpty(httpParams.body)) {
                 httpParams.body = new JSONObject().toJSONString();
-                omsLogger.warn("try to use default request body:{}", httpParams.body);
+                omsLogger.warn("尝试使用默认的请求body报文:{}", httpParams.body);
             }
             if (JSONValidator.from(httpParams.body).validate() && StringUtils.isEmpty(httpParams.mediaType)) {
                 httpParams.mediaType = "application/json";
-                omsLogger.warn("try to use 'application/json' as media type");
+                omsLogger.warn("尝试使用 “application/json” 的格式");
             }
         }
 
@@ -79,14 +87,14 @@ public class HttpProcessor extends CommonBasicProcessor {
         if (httpParams.timeout == null) {
             httpParams.timeout = DEFAULT_TIMEOUT;
         }
-        omsLogger.info("request timeout: {} seconds", httpParams.timeout);
+        omsLogger.info("请求超时时间: {} 秒", httpParams.timeout);
         OkHttpClient client = getClient(httpParams.timeout);
 
         Request.Builder builder = new Request.Builder().url(httpParams.url);
         if (httpParams.headers != null) {
             httpParams.headers.forEach((k, v) -> {
                 builder.addHeader(k, v);
-                omsLogger.info("add header {}:{}", k, v);
+                omsLogger.info("添加Header头信息 {}:{}", k, v);
             });
         }
 
@@ -104,7 +112,7 @@ public class HttpProcessor extends CommonBasicProcessor {
         }
 
         Response response = client.newCall(builder.build()).execute();
-        omsLogger.info("response: {}", response);
+//        omsLogger.info("response: {}", response);
 
         String msgBody = "";
         if (response.body() != null) {
@@ -112,14 +120,20 @@ public class HttpProcessor extends CommonBasicProcessor {
         }
 
         int responseCode = response.code();
-        String res = String.format("code:%d, body:%s", responseCode, msgBody);
+//        String res = String.format("code:%d, body:%s", responseCode, msgBody);
         boolean success = true;
         if (responseCode != HTTP_SUCCESS_CODE) {
             success = false;
-            omsLogger.warn("{} url: {} failed, response code is {}, response body is {}",
-                    httpParams.method, httpParams.url, responseCode, msgBody);
+//            omsLogger.error("{} url: {} failed, response code is {}, response body is {}", httpParams.method, httpParams.url, responseCode, msgBody);
+        } else {
+            JSONObject resultJson = JSON.parseObject(msgBody);
+            String resultCode = resultJson.getString("resultCode"), resultMessage = resultJson.getString("resultMessage");
+            if (!HTTP_SUCCESS_CODE_1.equals(resultCode)) {
+                success = false;
+//                omsLogger.error("{} url: {} failed, response code is {}, response body is {}", httpParams.method, httpParams.url, resultCode, resultMessage);
+            }
         }
-        return new ProcessResult(success, res);
+        return new ProcessResult(success, msgBody);
     }
 
     @Data
